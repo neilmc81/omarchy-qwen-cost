@@ -1,41 +1,70 @@
-# Qwen Voice Cost — Omarchy bar plugin
+# Qwen Voice Cost — Omarchy bar widget
 
-A cost tracker for the Qwen voice assistant (DashScope), as an Omarchy bar
-widget: one icon in the top bar, a dropdown on click.
+A cost and quota tracker for a [Qwen](https://qwenlm.github.io/) voice
+assistant, as an Omarchy bar widget. One icon in the status bar; click for a
+dropdown with usage, spend, free quota, and Alibaba Cloud billing.
 
-## What it shows
 
-- Real token usage and estimated cost for **today**, **this month**, and
-  **all-time** (from per-request records).
-- **Free quota** remaining, with a progress bar that turns red at ≥90%
-  consumption.
-- Live **Alibaba Cloud billing** (account balance + month bill) when an
-  AccessKey is configured; otherwise a local estimate.
 
-## How data gets in
+## Features
 
-The widget does no fetching itself. It watches the overview file that
+- Token usage + estimated cost for **today**, **this month**, **all-time**
+- **Free quota** progress bar (turns red at ≥90% consumption)
+- Live **Alibaba Cloud billing** (balance + month bill) when an AccessKey is
+  configured; falls back to a local estimate otherwise
+- Data updates live (no polling) and on click / via Refresh button
+
+## Requirements
+
+- Omarchy (Quickshell-based shell with QML plugin support)
+- The `qwen-cost-update` companion binary (produces the overview record the
+  widget reads)
+- *Optional:* Alibaba Cloud AccessKey for live billing
+
+## Installation
+
+```bash
+# 1. Clone the plugin into your Omarchy plugins directory
+git clone https://github.com/neilmc81/omarchy-qwen-cost \
+    ~/.config/omarchy/plugins/qwen.cost
+
+# 2. Make sure the qwen-cost-update binary is installed and points to the
+#    path below (the widget invokes it to refresh).
+
+# 3. Register the widget in ~/.config/omarchy/shell.json (bar section),
+#    then reload the shell:
+#    omarchy restart shell
+```
+
+## How it works
+
+The widget performs no fetching itself. It watches the overview file that
 `qwen-cost-update` writes:
 
-    $XDG_STATE_HOME/qwen-voice/cost/overview.json   (usage, quota, billing)
+```
+$XDG_STATE_HOME/qwen-voice/cost/overview.json   # usage, quota, billing
+```
 
-It re-reads the file live (`FileView` + `watchChanges`), refreshes every 5
-minutes, and on click. A "Refresh" button in the panel re-runs
-`qwen-cost-update --refresh`.
+Records are re-read live via `FileView` (watch changes), refreshed on a
+5-minute timer, and on click.
+
+## Optional configuration
+
+- **Live billing** — add an Alibaba Cloud AccessKey to
+  `~/.config/qwaudio/cost.json`
+- **Free quota** — define your quota limit in `~/.config/qwaudio/cost.json` to
+  render the progress bar
+
+Per-request records come from `~/.config/qwaudio/state/usage.jsonl`.
 
 ## Files
 
-- `BarWidget.qml`  — the bar icon (opens the dropdown, refreshes on click)
-- `Panel.qml`      — the dropdown: usage, free quota, billing, refresh
-- `manifest.json`  — plugin metadata
+```
+manifest.json   plugin metadata
+BarWidget.qml   bar icon (opens dropdown, refreshes on click)
+Panel.qml       dropdown: usage, free quota, billing, refresh
+```
 
-## Optional config
+## License
 
-Add an Alibaba Cloud AccessKey in `~/.config/qwaudio/cost.json` for live
-billing; define your free-quota limit there to render the progress bar.
-
-## Install
-
-Registered in `~/.config/omarchy/shell.json` (bar). Requires the companion
-`qwen-cost-update` binary to be present at
-`~/.local/share/qwen-omarchy-control/bin/qwen-cost-update`.
+[MIT](LICENSE)
